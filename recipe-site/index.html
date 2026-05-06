@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nonna's Table – Family Recipes</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Georgia', serif;
+      background: #fdf8f3;
+      color: #3a2e1e;
+    }
+
+    /* ── Top banner ── */
+    #top-banner {
+      background: #7b2d00;
+      color: #fdf3e7;
+      text-align: center;
+      font-size: 0.78rem;
+      padding: 6px 12px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px 14px;
+      background: #fff;
+      border-bottom: 3px solid #e8d5b7;
+      /* leave right side open for browser plug-in overlay */
+    }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-icon {
+      font-size: 2.4rem;
+      line-height: 1;
+    }
+    .logo-text h1 {
+      font-size: 1.75rem;
+      color: #7b2d00;
+      font-family: 'Georgia', serif;
+      letter-spacing: 0.02em;
+    }
+    .logo-text p {
+      font-size: 0.78rem;
+      color: #9e7a56;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* search bar – centred, avoids right-hand plug-in zone */
+    .header-search {
+      display: flex;
+      align-items: center;
+      background: #fdf3e7;
+      border: 1.5px solid #d4aa7d;
+      border-radius: 24px;
+      padding: 7px 16px;
+      gap: 8px;
+      width: 260px;
+    }
+    .header-search input {
+      border: none;
+      background: transparent;
+      font-size: 0.88rem;
+      color: #3a2e1e;
+      outline: none;
+      width: 100%;
+    }
+    .header-search span { color: #9e7a56; font-size: 1rem; }
+
+    /* right-side header actions – kept narrow, plug-in overlay sits here */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-size: 0.82rem;
+      color: #7b2d00;
+    }
+    .header-actions a {
+      text-decoration: none;
+      color: inherit;
+      transition: color .2s;
+    }
+    .header-actions a:hover { color: #c0392b; }
+    .btn-login {
+      background: #7b2d00;
+      color: #fff !important;
+      padding: 7px 18px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+    }
+
+    /* ── Nav / tabs ── */
+    nav {
+      background: #fff;
+      border-bottom: 2px solid #e8d5b7;
+      padding: 0 48px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+    }
+    nav a {
+      display: block;
+      padding: 13px 20px;
+      text-decoration: none;
+      font-size: 0.88rem;
+      color: #5a3e28;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      transition: color .2s, border-color .2s;
+    }
+    nav a:hover { color: #7b2d00; border-bottom-color: #d4aa7d; }
+    nav a.active { color: #7b2d00; border-bottom-color: #7b2d00; font-weight: bold; }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      background: linear-gradient(135deg, #7b2d00 0%, #c0622b 50%, #e8a87c 100%);
+      color: #fff;
+      padding: 52px 48px 52px 320px; /* left gap for plug-in overlay */
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '🍝';
+      position: absolute;
+      right: 320px; /* keep away from plug-in zone */
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 7rem;
+      opacity: 0.18;
+    }
+    .hero h2 { font-size: 2rem; margin-bottom: 8px; }
+    .hero p  { font-size: 1rem; opacity: 0.9; max-width: 420px; line-height: 1.6; }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 20px;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+
+    /* ── Main layout ── */
+    .page-wrapper {
+      display: grid;
+      /* wide left content zone; narrower right column (plug-in will overlay right) */
+      grid-template-columns: 1fr 300px;
+      gap: 0;
+      max-width: 1200px;
+      margin: 32px auto;
+      padding: 0 48px;
+    }
+
+    /* ── Section headings ── */
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .section-heading h3 {
+      font-size: 1.3rem;
+      color: #7b2d00;
+      border-left: 4px solid #d4aa7d;
+      padding-left: 10px;
+    }
+    .section-heading a {
+      font-size: 0.8rem;
+      color: #9e7a56;
+      text-decoration: none;
+    }
+    .section-heading a:hover { text-decoration: underline; }
+
+    /* ── Recipe cards grid ── */
+    .recipe-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+      margin-bottom: 40px;
+    }
+    .recipe-card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(60,30,10,.07);
+      transition: transform .2s, box-shadow .2s;
+      cursor: pointer;
+    }
+    .recipe-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(60,30,10,.13);
+    }
+    .card-thumb {
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+    }
+    .card-body { padding: 14px 16px 18px; }
+    .card-tag {
+      display: inline-block;
+      background: #fdf3e7;
+      color: #9e7a56;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+    }
+    .card-body h4 { font-size: 1rem; color: #3a2e1e; margin-bottom: 4px; }
+    .card-body p  { font-size: 0.8rem; color: #7a6247; line-height: 1.5; }
+    .card-meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: #9e7a56;
+    }
+    .card-meta span { display: flex; align-items: center; gap: 4px; }
+
+    /* colour themes per cuisine */
+    .thumb-italian  { background: linear-gradient(135deg,#f9e4b7,#f5c07a); }
+    .thumb-comfort  { background: linear-gradient(135deg,#d4ecd4,#a8d5a2); }
+    .thumb-light    { background: linear-gradient(135deg,#d0e8f5,#8cc4e0); }
+    .thumb-bake     { background: linear-gradient(135deg,#f7d6d0,#e8a090); }
+    .thumb-salad    { background: linear-gradient(135deg,#e0f5d0,#b5e085); }
+    .thumb-soup     { background: linear-gradient(135deg,#fce5c0,#f5b97a); }
+
+    /* ── Featured / spotlight ── */
+    .spotlight {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 14px rgba(60,30,10,.08);
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+    .spotlight-thumb {
+      height: 180px;
+      background: linear-gradient(135deg,#f9e4b7,#f0a060);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6rem;
+    }
+    .spotlight-body { padding: 20px 24px 24px; }
+    .spotlight-body .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #9e7a56;
+      margin-bottom: 6px;
+    }
+    .spotlight-body h3 { font-size: 1.4rem; color: #7b2d00; margin-bottom: 8px; }
+    .spotlight-body p  { font-size: 0.85rem; color: #5a3e28; line-height: 1.65; }
+
+    /* ingredients list */
+    .ingredient-list {
+      margin: 14px 0 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .ingredient-list span {
+      background: #fdf3e7;
+      border: 1px solid #e8d5b7;
+      border-radius: 14px;
+      padding: 3px 10px;
+      font-size: 0.75rem;
+      color: #7b2d00;
+    }
+    .ingredient-list span.highlight {
+      background: #7b2d00;
+      color: #fff;
+      border-color: #7b2d00;
+    }
+
+    /* ── Right sidebar ── */
+    .sidebar { padding-left: 28px; }
+    .sidebar-widget {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(60,30,10,.07);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .sidebar-widget h4 {
+      font-size: 0.95rem;
+      color: #7b2d00;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #e8d5b7;
+      padding-bottom: 8px;
+    }
+
+    /* weekly menu table */
+    .menu-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .menu-table th {
+      background: #fdf3e7;
+      color: #9e7a56;
+      text-align: left;
+      padding: 6px 8px;
+      font-weight: normal;
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+    }
+    .menu-table td { padding: 8px 8px; border-bottom: 1px solid #f2ebe0; color: #3a2e1e; vertical-align: top; }
+    .menu-table tr:last-child td { border-bottom: none; }
+    .menu-table .day { color: #9e7a56; font-size: 0.72rem; white-space: nowrap; }
+    .menu-highlight { color: #7b2d00; font-weight: bold; }
+
+    /* nutrition quick-view */
+    .nutrition-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 0.78rem;
+    }
+    .nut-item { background: #fdf3e7; border-radius: 8px; padding: 8px 10px; }
+    .nut-item .nut-val { font-size: 1.1rem; font-weight: bold; color: #7b2d00; }
+    .nut-item .nut-label { color: #9e7a56; font-size: 0.68rem; text-transform: uppercase; }
+
+    /* ── Footer ── */
+    footer {
+      background: #2e1a0e;
+      color: #c8a882;
+      font-size: 0.8rem;
+      padding: 36px 48px 24px;
+      margin-top: 40px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 28px;
+    }
+    .footer-col h5 { color: #f0d9b8; margin-bottom: 12px; font-size: 0.9rem; }
+    .footer-col p  { line-height: 1.7; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 7px; }
+    .footer-col ul li a { color: #c8a882; text-decoration: none; }
+    .footer-col ul li a:hover { color: #f0d9b8; }
+    .footer-bottom { border-top: 1px solid #4a2e18; padding-top: 16px; text-align: center; color: #7a5c3a; }
+  </style>
+</head>
+<body>
+
+<!-- Top promo banner -->
+<div id="top-banner">
+  🍋 New this week: Summer Lemon &amp; Ricotta Tart — <a href="#" style="color:#ffd9a0;text-decoration:underline;">Get the recipe →</a>
+</div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo-area">
+    <div class="logo-icon">🫕</div>
+    <div class="logo-text">
+      <h1>Nonna's Table</h1>
+      <p>Heirloom Recipes · Family Stories</p>
+    </div>
+  </div>
+
+  <div class="header-search">
+    <span>🔍</span>
+    <input type="text" placeholder="Search recipes, ingredients…" />
+  </div>
+
+  <div class="header-actions">
+    <a href="#">Saved ♡</a>
+    <a href="#">Shopping List</a>
+    <a href="#" class="btn-login">Sign In</a>
+  </div>
+</header>
+
+<!-- ══ NAVIGATION TABS ══ -->
+<nav>
+  <a href="#" class="active">All Recipes</a>
+  <a href="#">Italian</a>
+  <a href="#">Mediterranean</a>
+  <a href="#">Comfort Food</a>
+  <a href="#">Light &amp; Fresh</a>
+  <a href="#">Soups &amp; Stews</a>
+  <a href="#">Bakes &amp; Pastries</a>
+  <a href="#">Salads</a>
+  <a href="#">Desserts</a>
+  <a href="#">Family Favourites</a>
+  <a href="#">Seasonal</a>
+</nav>
+
+<!-- ══ HERO BANNER ══ -->
+<div class="hero">
+  <div class="hero-badge">Recipe of the Week</div>
+  <h2>Spinach &amp; Ricotta Stuffed Shells</h2>
+  <p>A beloved Sunday centrepiece straight from Nonna Rosa's kitchen —
+     jumbo pasta shells filled with creamy ricotta, wilted spinach, and a
+     slow-cooked San Marzano tomato sauce.</p>
+</div>
+
+<!-- ══ PAGE BODY ══ -->
+<div class="page-wrapper">
+
+  <!-- ── Left / Main content ── -->
+  <main>
+
+    <!-- Featured spotlight -->
+    <div class="section-heading">
+      <h3>Tonight's Spotlight</h3>
+      <a href="#">View all featured →</a>
+    </div>
+    <div class="spotlight">
+      <div class="spotlight-thumb">🧀</div>
+      <div class="spotlight-body">
+        <p class="label">⭐ Editor's Pick · Italian · 45 min</p>
+        <h3>Baked Ricotta &amp; Roasted Tomato Pasta</h3>
+        <p>
+          Whole-milk ricotta is seasoned with lemon zest, garlic, and fresh basil, then baked
+          until golden at the edges. Tossed through al-dente rigatoni with burst cherry tomatoes
+          and a drizzle of extra-virgin olive oil, this weeknight dish tastes like a weekend treat.
+          Serves 4 — ready in under an hour.
+        </p>
+        <div class="ingredient-list">
+          <span class="highlight">Ricotta</span>
+          <span>Rigatoni</span>
+          <span>Cherry Tomatoes</span>
+          <span>Garlic</span>
+          <span>Fresh Basil</span>
+          <span>Lemon Zest</span>
+          <span>Olive Oil</span>
+          <span>Parmesan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recipe cards -->
+    <div class="section-heading">
+      <h3>Popular This Week</h3>
+      <a href="#">See all →</a>
+    </div>
+    <div class="recipe-grid">
+
+      <div class="recipe-card">
+        <div class="card-thumb thumb-italian">🥟</div>
+        <div class="card-body">
+          <span class="card-tag">Italian</span>
+          <h4>Ricotta &amp; Herb Gnudi</h4>
+          <p>Pillowy ricotta dumplings with sage brown butter — lighter than gnocchi and twice as delightful.</p>
+          <div class="card-meta">
+            <span>⏱ 35 min</span><span>👤 Serves 4</span><span>⭐ 4.9</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <div class="card-thumb thumb-comfort">🍲</div>
+        <div class="card-body">
+          <span class="card-tag">Comfort Food</span>
+          <h4>Slow-Cooked Lamb Ragù</h4>
+          <p>Meltingly tender lamb shoulder in a rich red wine and tomato sauce, served over pappardelle.</p>
+          <div class="card-meta">
+            <span>⏱ 3 hr</span><span>👤 Serves 6</span><span>⭐ 4.8</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <div class="card-thumb thumb-light">🥗</div>
+        <div class="card-body">
+          <span class="card-tag">Light &amp; Fresh</span>
+          <h4>Grilled Peach &amp; Ricotta Salad</h4>
+          <p>Caramelised peach halves with whipped ricotta, rocket, and a honey-balsamic glaze.</p>
+          <div class="card-meta">
+            <span>⏱ 15 min</span><span>👤 Serves 2</span><span>⭐ 4.7</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <div class="card-thumb thumb-bake">🥧</div>
+        <div class="card-body">
+          <span class="card-tag">Bakes &amp; Pastries</span>
+          <h4>Sicilian Ricotta Cheesecake</h4>
+          <p>A lighter, less sweet alternative to New York cheesecake — fragrant with orange and vanilla.</p>
+          <div class="card-meta">
+            <span>⏱ 1 hr 10 min</span><span>👤 Serves 8</span><span>⭐ 4.9</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <div class="card-thumb thumb-salad">🫙</div>
+        <div class="card-body">
+          <span class="card-tag">Mediterranean</span>
+          <h4>White Bean &amp; Rosemary Soup</h4>
+          <p>Tuscan-style cannellini bean soup finished with a spoonful of fresh ricotta and crusty bread.</p>
+          <div class="card-meta">
+            <span>⏱ 40 min</span><span>👤 Serves 4</span><span>⭐ 4.6</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <div class="card-thumb thumb-soup">🍕</div>
+        <div class="card-body">
+          <span class="card-tag">Family Favourites</span>
+          <h4>Ricotta &amp; Spinach Calzone</h4>
+          <p>Golden hand-folded calzone stuffed with ricotta, mozzarella, spinach, and a hint of nutmeg.</p>
+          <div class="card-meta">
+            <span>⏱ 55 min</span><span>👤 Serves 4</span><span>⭐ 4.8</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /recipe-grid -->
+
+  </main>
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+
+    <!-- Weekly family menu -->
+    <div class="sidebar-widget">
+      <h4>📅 This Week's Family Menu</h4>
+      <table class="menu-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Dinner</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="day">Mon</td>
+            <td>Pasta e Fagioli</td>
+          </tr>
+          <tr>
+            <td class="day">Tue</td>
+            <td class="menu-highlight">Baked Ricotta Rigatoni ⭐</td>
+          </tr>
+          <tr>
+            <td class="day">Wed</td>
+            <td>Grilled Chicken &amp; Tabbouleh</td>
+          </tr>
+          <tr>
+            <td class="day">Thu</td>
+            <td>Spinach &amp; Ricotta Stuffed Shells</td>
+          </tr>
+          <tr>
+            <td class="day">Fri</td>
+            <td>Slow-Cooked Lamb Ragù</td>
+          </tr>
+          <tr>
+            <td class="day">Sat</td>
+            <td>Ricotta &amp; Spinach Calzone</td>
+          </tr>
+          <tr>
+            <td class="day">Sun</td>
+            <td>Sicilian Ricotta Cheesecake 🎂</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Nutrition snapshot -->
+    <div class="sidebar-widget">
+      <h4>🥗 Tonight's Nutrition</h4>
+      <p style="font-size:0.75rem;color:#9e7a56;margin-bottom:12px;">Per serving · Baked Ricotta Rigatoni</p>
+      <div class="nutrition-grid">
+        <div class="nut-item">
+          <div class="nut-val">520</div>
+          <div class="nut-label">Calories</div>
+        </div>
+        <div class="nut-item">
+          <div class="nut-val">22g</div>
+          <div class="nut-label">Protein</div>
+        </div>
+        <div class="nut-item">
+          <div class="nut-val">18g</div>
+          <div class="nut-label">Fat</div>
+        </div>
+        <div class="nut-item">
+          <div class="nut-val">64g</div>
+          <div class="nut-label">Carbs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seasonal tip -->
+    <div class="sidebar-widget">
+      <h4>🌿 Seasonal Tip</h4>
+      <p style="font-size:0.82rem;color:#5a3e28;line-height:1.65;">
+        Fresh ricotta is at its best from May to September.
+        Look for sheep's-milk ricotta at your local deli for a richer,
+        more authentic flavour in baked dishes.
+      </p>
+    </div>
+
+  </aside>
+
+</div><!-- /page-wrapper -->
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h5>🫕 Nonna's Table</h5>
+      <p>A place for real food and the stories behind it. Recipes passed down through generations,
+         tested in family kitchens, and shared with love.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Cuisines</h5>
+      <ul>
+        <li><a href="#">Italian</a></li>
+        <li><a href="#">Mediterranean</a></li>
+        <li><a href="#">Comfort Food</a></li>
+        <li><a href="#">Light &amp; Fresh</a></li>
+        <li><a href="#">Seasonal</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Explore</h5>
+      <ul>
+        <li><a href="#">Weekly Menus</a></li>
+        <li><a href="#">Shopping Lists</a></li>
+        <li><a href="#">Nutrition Guide</a></li>
+        <li><a href="#">Video Tutorials</a></li>
+        <li><a href="#">Nonna's Blog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>About</h5>
+      <ul>
+        <li><a href="#">Our Story</a></li>
+        <li><a href="#">The Family</a></li>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Use</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2026 Nonna's Table · Made with ♥ and a great deal of ricotta
+  </div>
+</footer>
+
+</body>
+</html>
