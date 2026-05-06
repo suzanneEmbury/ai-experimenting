@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nonna's Table – Sunday Dinner Menu</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Georgia', serif;
+      background: #fdf8f3;
+      color: #3a2e1e;
+      min-width: 1050px; /* keeps layout stable at screenshot widths */
+    }
+
+    /* ── Top banner ── */
+    #top-banner {
+      background: #7b2d00;
+      color: #fdf3e7;
+      text-align: center;
+      font-size: 0.78rem;
+      padding: 6px 12px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px 14px;
+      background: #fff;
+      border-bottom: 3px solid #e8d5b7;
+    }
+    .logo-area { display: flex; align-items: center; gap: 14px; }
+    .logo-icon  { font-size: 2.4rem; line-height: 1; }
+    .logo-text h1 {
+      font-size: 1.75rem;
+      color: #7b2d00;
+      letter-spacing: 0.02em;
+    }
+    .logo-text p {
+      font-size: 0.78rem;
+      color: #9e7a56;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .header-search {
+      display: flex;
+      align-items: center;
+      background: #fdf3e7;
+      border: 1.5px solid #d4aa7d;
+      border-radius: 24px;
+      padding: 7px 16px;
+      gap: 8px;
+      width: 260px;
+    }
+    .header-search input {
+      border: none; background: transparent;
+      font-size: 0.88rem; color: #3a2e1e; outline: none; width: 100%;
+    }
+    .header-search span { color: #9e7a56; font-size: 1rem; }
+    .header-actions {
+      display: flex; align-items: center;
+      gap: 18px; font-size: 0.82rem; color: #7b2d00;
+    }
+    .header-actions a { text-decoration: none; color: inherit; }
+    .header-actions a:hover { color: #c0392b; }
+    .btn-login {
+      background: #7b2d00; color: #fff !important;
+      padding: 7px 18px; border-radius: 20px; font-size: 0.82rem;
+    }
+
+    /* ── Nav / tabs ── */
+    nav {
+      background: #fff;
+      border-bottom: 2px solid #e8d5b7;
+      padding: 0 48px;
+      display: flex;
+      overflow-x: auto;
+    }
+    nav a {
+      display: block;
+      padding: 13px 20px;
+      text-decoration: none;
+      font-size: 0.88rem;
+      color: #5a3e28;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      transition: color .2s, border-color .2s;
+    }
+    nav a:hover { color: #7b2d00; border-bottom-color: #d4aa7d; }
+    nav a.active { color: #7b2d00; border-bottom-color: #7b2d00; font-weight: bold; }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb {
+      padding: 10px 48px;
+      font-size: 0.78rem;
+      color: #9e7a56;
+      background: #fdf3e7;
+      border-bottom: 1px solid #e8d5b7;
+    }
+    .breadcrumb a { color: #9e7a56; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #c8a882; margin: 0 6px; }
+
+    /* ══════════════════════════════════════════
+       PAGE WRAPPER  –  sidebar LEFT, menu RIGHT
+       Designed for 1400 × 800 viewport (2× of 700×400)
+       ══════════════════════════════════════════ */
+    .page-wrapper {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 0;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 40px 40px;
+      align-items: start;
+    }
+
+    /* ── LEFT SIDEBAR ── */
+    .sidebar { padding-right: 28px; }
+    .sidebar-widget {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(60,30,10,.07);
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .sidebar-widget h4 {
+      font-size: 0.9rem;
+      color: #7b2d00;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #e8d5b7;
+      padding-bottom: 7px;
+    }
+    .menu-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .menu-table th {
+      background: #fdf3e7; color: #9e7a56;
+      text-align: left; padding: 5px 7px;
+      font-weight: normal; text-transform: uppercase;
+      font-size: 0.65rem; letter-spacing: 0.08em;
+    }
+    .menu-table td {
+      padding: 7px 7px; border-bottom: 1px solid #f2ebe0;
+      color: #3a2e1e; vertical-align: top;
+    }
+    .menu-table tr:last-child td { border-bottom: none; }
+    .menu-table .day  { color: #9e7a56; font-size: 0.7rem; white-space: nowrap; }
+    .menu-table .today { background: #fff8f0; }
+    .menu-highlight { color: #7b2d00; font-weight: bold; }
+
+    .nutrition-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; font-size: 0.76rem; }
+    .nut-item { background: #fdf3e7; border-radius: 8px; padding: 7px 9px; }
+    .nut-item .nut-val   { font-size: 1.05rem; font-weight: bold; color: #7b2d00; }
+    .nut-item .nut-label { color: #9e7a56; font-size: 0.65rem; text-transform: uppercase; }
+
+    /* ── MAIN CONTENT – detailed menu ── */
+    main { min-width: 0; }
+
+    /* Menu page header */
+    .menu-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .menu-header-left h2 {
+      font-size: 1.6rem;
+      color: #7b2d00;
+    }
+    .menu-header-left p {
+      font-size: 0.82rem;
+      color: #9e7a56;
+      margin-top: 3px;
+    }
+    .menu-tabs {
+      display: flex;
+      gap: 6px;
+    }
+    .menu-tab {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      border: 1.5px solid #d4aa7d;
+      color: #9e7a56;
+      cursor: pointer;
+      background: #fff;
+      text-decoration: none;
+    }
+    .menu-tab.active {
+      background: #7b2d00;
+      color: #fff;
+      border-color: #7b2d00;
+    }
+
+    /* ── Course sections ── */
+    .course-section {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(60,30,10,.07);
+      margin-bottom: 22px;
+      overflow: hidden;
+    }
+    .course-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 22px;
+      background: #fdf3e7;
+      border-bottom: 1px solid #e8d5b7;
+    }
+    .course-header .course-icon { font-size: 1.4rem; }
+    .course-header h3 {
+      font-size: 1rem;
+      color: #7b2d00;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: bold;
+    }
+    .course-header .course-note {
+      margin-left: auto;
+      font-size: 0.72rem;
+      color: #9e7a56;
+      font-style: italic;
+    }
+
+    /* individual dish rows */
+    .dish-row {
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 22px;
+      border-bottom: 1px solid #f5ece0;
+      transition: background .15s;
+    }
+    .dish-row:last-child { border-bottom: none; }
+    .dish-row:hover { background: #fffaf5; }
+
+    /* featured dish gets a highlight stripe */
+    .dish-row.featured {
+      border-left: 4px solid #7b2d00;
+      background: #fff8f2;
+    }
+    .dish-row.featured:hover { background: #fff3ea; }
+
+    .dish-emoji {
+      width: 52px; height: 52px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+    .emoji-warm   { background: linear-gradient(135deg,#f9e4b7,#f5c07a); }
+    .emoji-green  { background: linear-gradient(135deg,#d4ecd4,#a8d5a2); }
+    .emoji-blue   { background: linear-gradient(135deg,#d0e8f5,#8cc4e0); }
+    .emoji-pink   { background: linear-gradient(135deg,#f7d6d0,#e8a090); }
+    .emoji-gold   { background: linear-gradient(135deg,#fce5c0,#f5b97a); }
+    .emoji-purple { background: linear-gradient(135deg,#e8d5f5,#c8a0e8); }
+    .emoji-red    { background: linear-gradient(135deg,#fdd5d0,#f09080); }
+
+    .dish-info { min-width: 0; }
+    .dish-name {
+      font-size: 0.97rem;
+      font-weight: bold;
+      color: #3a2e1e;
+      margin-bottom: 3px;
+    }
+    .dish-desc {
+      font-size: 0.78rem;
+      color: #7a6247;
+      line-height: 1.5;
+    }
+    .dish-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .tag {
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .tag-cuisine  { background: #f0ebe0; color: #7a6247; }
+    .tag-diet     { background: #e0f0e0; color: #3a7a3a; }
+    .tag-star     { background: #7b2d00; color: #fff; }
+    .tag-allergen { background: #fff0d0; color: #9e6000; }
+
+    .dish-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .dish-time {
+      font-size: 0.75rem;
+      color: #9e7a56;
+      white-space: nowrap;
+    }
+    .dish-cal {
+      font-size: 0.72rem;
+      background: #fdf3e7;
+      border-radius: 8px;
+      padding: 3px 8px;
+      color: #7b2d00;
+      white-space: nowrap;
+    }
+    .btn-view {
+      font-size: 0.72rem;
+      padding: 5px 12px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1.5px solid #d4aa7d;
+      color: #7b2d00;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-view:hover { background: #fdf3e7; }
+    .btn-view.primary {
+      background: #7b2d00;
+      color: #fff;
+      border-color: #7b2d00;
+    }
+    .btn-view.primary:hover { background: #9e3a00; }
+
+    /* ── Footer ── */
+    footer {
+      background: #2e1a0e;
+      color: #c8a882;
+      font-size: 0.8rem;
+      padding: 30px 48px 20px;
+      margin-top: 10px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 22px;
+    }
+    .footer-col h5 { color: #f0d9b8; margin-bottom: 10px; font-size: 0.88rem; }
+    .footer-col p  { line-height: 1.7; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 6px; }
+    .footer-col ul li a { color: #c8a882; text-decoration: none; }
+    .footer-col ul li a:hover { color: #f0d9b8; }
+    .footer-bottom {
+      border-top: 1px solid #4a2e18;
+      padding-top: 14px;
+      text-align: center;
+      color: #7a5c3a;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top promo banner -->
+<div id="top-banner">
+  🍋 New this week: Summer Lemon &amp; Ricotta Tart — <a href="#" style="color:#ffd9a0;text-decoration:underline;">Get the recipe →</a>
+</div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo-area">
+    <div class="logo-icon">🫕</div>
+    <div class="logo-text">
+      <h1>Nonna's Table</h1>
+      <p>Heirloom Recipes · Family Stories</p>
+    </div>
+  </div>
+  <div class="header-search">
+    <span>🔍</span>
+    <input type="text" placeholder="Search recipes, ingredients…" />
+  </div>
+  <div class="header-actions">
+    <a href="#">Saved ♡</a>
+    <a href="#">Shopping List</a>
+    <a href="#" class="btn-login">Sign In</a>
+  </div>
+</header>
+
+<!-- ══ NAVIGATION TABS ══ -->
+<nav>
+  <a href="index.html">All Recipes</a>
+  <a href="#">Italian</a>
+  <a href="#">Mediterranean</a>
+  <a href="#">Comfort Food</a>
+  <a href="#">Light &amp; Fresh</a>
+  <a href="#">Soups &amp; Stews</a>
+  <a href="#">Bakes &amp; Pastries</a>
+  <a href="#">Salads</a>
+  <a href="#">Desserts</a>
+  <a href="#" class="active">Family Favourites</a>
+  <a href="#">Seasonal</a>
+</nav>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <a href="index.html">Home</a><span>›</span>
+  <a href="#">Family Favourites</a><span>›</span>
+  <a href="#">Weekly Menus</a><span>›</span>
+  Sunday Family Dinner
+</div>
+
+<!-- ══ PAGE BODY ══ -->
+<div class="page-wrapper">
+
+  <!-- ════ LEFT SIDEBAR ════ -->
+  <aside class="sidebar">
+
+    <!-- Weekly family menu -->
+    <div class="sidebar-widget">
+      <h4>📅 This Week's Family Menu</h4>
+      <table class="menu-table">
+        <thead>
+          <tr><th>Day</th><th>Dinner</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="day">Mon</td>
+            <td>Pasta e Fagioli</td>
+          </tr>
+          <tr>
+            <td class="day">Tue</td>
+            <td>Grilled Chicken &amp; Tabbouleh</td>
+          </tr>
+          <tr>
+            <td class="day">Wed</td>
+            <td>Slow-Cooked Lamb Ragù</td>
+          </tr>
+          <tr>
+            <td class="day">Thu</td>
+            <td>Minestrone &amp; Crusty Bread</td>
+          </tr>
+          <tr>
+            <td class="day">Fri</td>
+            <td>Spaghetti alle Vongole</td>
+          </tr>
+          <tr>
+            <td class="day">Sat</td>
+            <td>Roast Chicken &amp; Roasted Veg</td>
+          </tr>
+          <tr class="today">
+            <td class="day">Sun ◀</td>
+            <td class="menu-highlight">Sunday Family Dinner ⭐</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Nutrition snapshot – based on the ricotta main -->
+    <div class="sidebar-widget">
+      <h4>🥗 Main Course Nutrition</h4>
+      <p style="font-size:0.72rem;color:#9e7a56;margin-bottom:10px;">Per serving · Baked Ricotta Rigatoni</p>
+      <div class="nutrition-grid">
+        <div class="nut-item">
+          <div class="nut-val">520</div>
+          <div class="nut-label">Calories</div>
+        </div>
+        <div class="nut-item">
+          <div class="nut-val">22g</div>
+          <div class="nut-label">Protein</div>
+        </div>
+        <div class="nut-item">
+          <div class="nut-val">18g</div>
+          <div class="nut-label">Fat</div>
+        </div>
+        <div class="nut-item">
+          <div class="nut-val">64g</div>
+          <div class="nut-label">Carbs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seasonal tip -->
+    <div class="sidebar-widget">
+      <h4>🌿 Seasonal Tip</h4>
+      <p style="font-size:0.8rem;color:#5a3e28;line-height:1.65;">
+        Fresh ricotta is at its best from May to September.
+        Look for sheep's-milk ricotta at your local deli for a richer,
+        more authentic flavour in baked dishes.
+      </p>
+    </div>
+
+    <!-- Print / share -->
+    <div class="sidebar-widget">
+      <h4>📤 Share This Menu</h4>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a href="#" style="display:block;text-align:center;padding:8px;background:#fdf3e7;border-radius:8px;font-size:0.78rem;color:#7b2d00;text-decoration:none;">🖨 Print Menu</a>
+        <a href="#" style="display:block;text-align:center;padding:8px;background:#fdf3e7;border-radius:8px;font-size:0.78rem;color:#7b2d00;text-decoration:none;">📋 Copy Shopping List</a>
+        <a href="#" style="display:block;text-align:center;padding:8px;background:#fdf3e7;border-radius:8px;font-size:0.78rem;color:#7b2d00;text-decoration:none;">♡ Save Menu</a>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ════ MAIN – detailed menu ════ -->
+  <main>
+
+    <div class="menu-header">
+      <div class="menu-header-left">
+        <h2>🍽 Sunday Family Dinner</h2>
+        <p>5 courses · Serves 6 · Italian &amp; Mediterranean · approx. 2 hrs 40 min total</p>
+      </div>
+      <div class="menu-tabs">
+        <a href="#" class="menu-tab active">Full Menu</a>
+        <a href="#" class="menu-tab">Starter Only</a>
+        <a href="#" class="menu-tab">Mains Only</a>
+        <a href="#" class="menu-tab">Desserts</a>
+      </div>
+    </div>
+
+    <!-- ── STARTER ── -->
+    <div class="course-section">
+      <div class="course-header">
+        <span class="course-icon">🥗</span>
+        <h3>Antipasto &amp; Starters</h3>
+        <span class="course-note">Choose one per person</span>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-green">🥗</div>
+        <div class="dish-info">
+          <div class="dish-name">Tricolore Salad</div>
+          <div class="dish-desc">Fresh buffalo mozzarella, heirloom tomatoes, and ripe avocado with extra-virgin olive oil and torn basil.</div>
+          <div class="dish-tags">
+            <span class="tag tag-cuisine">Italian</span>
+            <span class="tag tag-diet">Vegetarian</span>
+            <span class="tag tag-diet">Gluten-Free</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 10 min</span>
+          <span class="dish-cal">210 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-gold">🍞</div>
+        <div class="dish-info">
+          <div class="dish-name">Bruschetta al Pomodoro</div>
+          <div class="dish-desc">Toasted sourdough rubbed with garlic, heaped with slow-roasted San Marzano tomatoes and a drizzle of aged balsamic.</div>
+          <div class="dish-tags">
+            <span class="tag tag-cuisine">Italian</span>
+            <span class="tag tag-diet">Vegan</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 15 min</span>
+          <span class="dish-cal">185 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-blue">🦐</div>
+        <div class="dish-info">
+          <div class="dish-name">Garlic Prawns with Lemon &amp; Parsley</div>
+          <div class="dish-desc">Plump king prawns pan-fried in white wine, butter, and garlic, served with warm ciabatta to mop up the juices.</div>
+          <div class="dish-tags">
+            <span class="tag tag-cuisine">Mediterranean</span>
+            <span class="tag tag-allergen">Shellfish</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 12 min</span>
+          <span class="dish-cal">240 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SOUP ── -->
+    <div class="course-section">
+      <div class="course-header">
+        <span class="course-icon">🍲</span>
+        <h3>Soup</h3>
+        <span class="course-note">Served to the table</span>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-gold">🍲</div>
+        <div class="dish-info">
+          <div class="dish-name">Roasted Tomato &amp; Basil Bisque</div>
+          <div class="dish-desc">Slow-roasted plum tomatoes blended with vegetable stock, finished with a swirl of cream and fresh basil oil. Rich, silky, deeply savoury.</div>
+          <div class="dish-tags">
+            <span class="tag tag-cuisine">Italian</span>
+            <span class="tag tag-diet">Vegetarian</span>
+            <span class="tag tag-diet">Gluten-Free</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 50 min</span>
+          <span class="dish-cal">165 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MAIN COURSE ── -->
+    <div class="course-section">
+      <div class="course-header">
+        <span class="course-icon">🍝</span>
+        <h3>Main Course</h3>
+        <span class="course-note">Choose one per person · served with sides</span>
+      </div>
+
+      <!-- RICOTTA DISH – featured -->
+      <div class="dish-row featured">
+        <div class="dish-emoji emoji-warm">🧀</div>
+        <div class="dish-info">
+          <div class="dish-name">Baked Ricotta &amp; Roasted Tomato Rigatoni</div>
+          <div class="dish-desc">
+            Whole-milk ricotta seasoned with lemon zest, garlic, and fresh basil, baked until golden at the edges.
+            Tossed through al-dente rigatoni with burst cherry tomatoes and extra-virgin olive oil.
+            Nonna Rosa's most-requested Sunday pasta — comforting, fresh, and ready in under an hour.
+          </div>
+          <div class="dish-tags">
+            <span class="tag tag-star">⭐ Chef's Choice</span>
+            <span class="tag tag-cuisine">Italian</span>
+            <span class="tag tag-diet">Vegetarian</span>
+            <span class="tag tag-allergen">Contains: Dairy · Gluten</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 45 min</span>
+          <span class="dish-cal">520 kcal</span>
+          <a href="#" class="btn-view primary">Full Recipe →</a>
+        </div>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-red">🐑</div>
+        <div class="dish-info">
+          <div class="dish-name">Slow-Cooked Lamb Shoulder with Gremolata</div>
+          <div class="dish-desc">
+            Bone-in lamb shoulder braised for four hours in white wine, rosemary, and garlic until it falls apart.
+            Finished with a bright lemon and parsley gremolata.
+          </div>
+          <div class="dish-tags">
+            <span class="tag tag-cuisine">Mediterranean</span>
+            <span class="tag tag-diet">Gluten-Free</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 4 hr 20 min</span>
+          <span class="dish-cal">610 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-blue">🐟</div>
+        <div class="dish-info">
+          <div class="dish-name">Oven-Baked Sea Bream with Capers &amp; Olives</div>
+          <div class="dish-desc">
+            Whole sea bream baked over a bed of sliced fennel, cherry tomatoes, Sicilian olives, and capers —
+            a light but deeply flavoured centrepiece.
+          </div>
+          <div class="dish-tags">
+            <span class="tag tag-cuisine">Sicilian</span>
+            <span class="tag tag-diet">Gluten-Free</span>
+            <span class="tag tag-allergen">Fish</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 35 min</span>
+          <span class="dish-cal">390 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SIDES ── -->
+    <div class="course-section">
+      <div class="course-header">
+        <span class="course-icon">🥦</span>
+        <h3>Sides &amp; Contorni</h3>
+        <span class="course-note">Served to share</span>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-green">🥦</div>
+        <div class="dish-info">
+          <div class="dish-name">Roasted Tenderstem Broccoli with Chilli &amp; Almonds</div>
+          <div class="dish-desc">Charred in a hot oven, tossed with chilli flakes, toasted almonds, and a squeeze of lemon.</div>
+          <div class="dish-tags">
+            <span class="tag tag-diet">Vegan</span>
+            <span class="tag tag-diet">Gluten-Free</span>
+            <span class="tag tag-allergen">Nuts</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 20 min</span>
+          <span class="dish-cal">115 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-gold">🥔</div>
+        <div class="dish-info">
+          <div class="dish-name">Crispy Rosemary &amp; Sea Salt Potatoes</div>
+          <div class="dish-desc">Baby potatoes par-boiled then roasted at high heat until golden and crunchy, scattered with fresh rosemary and flaky sea salt.</div>
+          <div class="dish-tags">
+            <span class="tag tag-diet">Vegan</span>
+            <span class="tag tag-diet">Gluten-Free</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 40 min</span>
+          <span class="dish-cal">195 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DESSERT ── -->
+    <div class="course-section">
+      <div class="course-header">
+        <span class="course-icon">🍮</span>
+        <h3>Dessert</h3>
+        <span class="course-note">Choose one per person</span>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-purple">🍮</div>
+        <div class="dish-info">
+          <div class="dish-name">Panna Cotta with Amarena Cherry Compote</div>
+          <div class="dish-desc">Classic vanilla panna cotta — silky and barely set — topped with a glossy compote of Amarena cherries in syrup. Make ahead, serve chilled.</div>
+          <div class="dish-tags">
+            <span class="tag tag-cuisine">Italian</span>
+            <span class="tag tag-diet">Gluten-Free</span>
+            <span class="tag tag-allergen">Dairy</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 20 min + chill</span>
+          <span class="dish-cal">295 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-pink">🍰</div>
+        <div class="dish-info">
+          <div class="dish-name">Tiramisu</div>
+          <div class="dish-desc">The real deal: savoiardi biscuits soaked in espresso and Marsala, layered with mascarpone cream, and dusted with bitter cocoa. Set overnight for best results.</div>
+          <div class="dish-tags">
+            <span class="tag tag-cuisine">Italian</span>
+            <span class="tag tag-allergen">Dairy · Eggs · Gluten</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 30 min + overnight</span>
+          <span class="dish-cal">420 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+
+      <div class="dish-row">
+        <div class="dish-emoji emoji-gold">🍊</div>
+        <div class="dish-info">
+          <div class="dish-name">Blood Orange &amp; Almond Polenta Cake</div>
+          <div class="dish-desc">Dense, moist, and naturally gluten-free — this Sicilian-inspired cake is fragrant with blood orange zest and ground almonds, served warm with crème fraîche.</div>
+          <div class="dish-tags">
+            <span class="tag tag-cuisine">Sicilian</span>
+            <span class="tag tag-diet">Gluten-Free</span>
+            <span class="tag tag-allergen">Nuts · Dairy · Eggs</span>
+          </div>
+        </div>
+        <div class="dish-right">
+          <span class="dish-time">⏱ 55 min</span>
+          <span class="dish-cal">365 kcal</span>
+          <a href="#" class="btn-view">View Recipe</a>
+        </div>
+      </div>
+
+    </div><!-- /dessert -->
+
+  </main>
+</div><!-- /page-wrapper -->
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h5>🫕 Nonna's Table</h5>
+      <p>A place for real food and the stories behind it. Recipes passed down through generations,
+         tested in family kitchens, and shared with love.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Cuisines</h5>
+      <ul>
+        <li><a href="#">Italian</a></li>
+        <li><a href="#">Mediterranean</a></li>
+        <li><a href="#">Comfort Food</a></li>
+        <li><a href="#">Light &amp; Fresh</a></li>
+        <li><a href="#">Seasonal</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Explore</h5>
+      <ul>
+        <li><a href="#">Weekly Menus</a></li>
+        <li><a href="#">Shopping Lists</a></li>
+        <li><a href="#">Nutrition Guide</a></li>
+        <li><a href="#">Video Tutorials</a></li>
+        <li><a href="#">Nonna's Blog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>About</h5>
+      <ul>
+        <li><a href="#">Our Story</a></li>
+        <li><a href="#">The Family</a></li>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Use</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2026 Nonna's Table · Made with ♥ and a great deal of ricotta
+  </div>
+</footer>
+
+</body>
+</html>
