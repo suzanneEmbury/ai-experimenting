@@ -1,6 +1,5 @@
 import html
 import mailbox
-import os
 from email.header import decode_header
 
 import bleach
@@ -8,9 +7,7 @@ from bs4 import BeautifulSoup
 
 # Configuration
 MBOX_FILE = 'archive.mbox'
-OUTPUT_DIR = 'html_archive'
-
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+OUTPUT_FILE = 'html_archive.html'
 
 # Allow a small set of safe formatting tags so HTML emails still render nicely
 ALLOWED_TAGS = [
@@ -136,6 +133,8 @@ def extract_best_body(message):
 mbox = mailbox.mbox(MBOX_FILE)
 
 print("Starting secure extraction...")
+
+email_sections = []
 for idx, message in enumerate(mbox):
     subject = html.escape(decode_mime_header(message['subject']))
     msg_from = html.escape(decode_mime_header(message['from']))
@@ -143,35 +142,42 @@ for idx, message in enumerate(mbox):
 
     sanitized_body = extract_best_body(message)
 
-    html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Email {idx}: {subject}</title>
-    <style>
-        body {{ font-family: sans-serif; margin: 20px; line-height: 1.5; color: #333; }}
-        .metadata {{ background: #f4f4f4; padding: 10px; border-left: 4px solid #0066cc; margin-bottom: 20px; }}
-        .content {{ padding: 10px; border: 1px solid #ddd; background: #fff; }}
-        pre {{ white-space: pre-wrap; word-wrap: break-word; }}
-        img {{ max-width: 100%; height: auto; }}
-        table {{ border-collapse: collapse; }}
-        td, th {{ border: 1px solid #ddd; padding: 4px; }}
-    </style>
-</head>
-<body>
-    <div class="metadata">
+    email_section = f"""<div class=\"email\">
+    <div class=\"metadata\">
         <strong>From:</strong> {msg_from}<br>
         <strong>Date:</strong> {date}<br>
         <strong>Subject:</strong> {subject}
     </div>
-    <div class="content">
+    <div class=\"content\">
         {sanitized_body}
     </div>
+</div>"""
+    email_sections.append(email_section)
+
+html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=\"utf-8\">
+    <title>Email Archive</title>
+    <style>
+        body {{ font-family: sans-serif; margin: 20px; line-height: 1.5; color: #333; }}
+        .metadata {{ background: #f4f4f4; padding: 10px; border-left: 4px solid #0066cc; margin-bottom: 20px; }}
+        .content {{ padding: 10px; border: 1px solid #ddd; background: #fff; }}
+        .email {{ margin-bottom: 40px; }}
+        pre {{ white-space: pre-wrap; word-wrap: break-word; }}
+        img {{ max-width: 100%; height: auto; }}
+        table {{ border-collapse: collapse; }}
+        td, th {{ border: 1px solid #ddd; padding: 4px; }}
+        hr {{ margin: 40px 0; border: 0; border-top: 1px solid #ccc; }}
+    </style>
+</head>
+<body>
+    <h1>Email Archive</h1>
+    {'<hr>\n'.join(email_sections)}
 </body>
 </html>"""
 
-    safe_filename = f"email_{idx}.html"
-    with open(os.path.join(OUTPUT_DIR, safe_filename), "w", encoding="utf-8") as f:
-        f.write(html_content)
+with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+    f.write(html_content)
 
-print(f"Extraction complete. {len(mbox)} files securely saved locally inside: {OUTPUT_DIR}")
+print(f"Extraction complete. {len(email_sections)} emails securely saved to: {OUTPUT_FILE}")
