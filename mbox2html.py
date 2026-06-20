@@ -1,15 +1,36 @@
+import html
 import mailbox
 import os
-import re
 from email.header import decode_header
+
+import bleach
 from bs4 import BeautifulSoup
 
 # Configuration
 MBOX_FILE = 'archive.mbox'
 OUTPUT_DIR = 'html_archive'
 
-if not os.path.exists(OUTPUT_DIR):
-    os.makedirs(OUTPUT_DIR)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# Allow a small set of safe formatting tags so HTML emails still render nicely
+ALLOWED_TAGS = [
+    'p', 'br', 'div', 'span', 'strong', 'b', 'em', 'i', 'u',
+    'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'hr',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'a', 'img'
+]
+
+ALLOWED_ATTRIBUTES = {
+    '*': ['class', 'title'],
+    'a': ['href', 'title', 'rel'],
+    'img': ['src', 'alt', 'title'],
+    'th': ['colspan', 'rowspan'],
+    'td': ['colspan', 'rowspan'],
+}
+
+ALLOWED_PROTOCOLS = ['http', 'https', 'mailto']
+
 
 def decode_mime_header(header_value):
     if not header_value:
@@ -23,70 +44,105 @@ def decode_mime_header(header_value):
             header_parts.append(bytes_or_str)
     return "".join(header_parts)
 
+
 def sanitize_html(raw_html):
     """
-    Parses the HTML locally and strips out executable scripts and dangerous attributes.
+    Sanitize HTML while preserving common formatting used by email content.
     """
-    if not raw_html.strip():
+    if not raw_html:
         return ""
-    
-    # Use BeautifulSoup to parse the document locally
-    soup = BeautifulSoup(raw_html, 'html.parser')
-    
-    # 1. Remove inherently dangerous structural tags
-    blacklisted_tags = ['script', 'iframe', 'object', 'embed', 'applet', 'meta', 'link']
-    for tag in soup.find_all(blacklisted_tags):
-        tag.decompose()
-        
-    # 2. Remove inline JavaScript event handlers (e.g., onload, onerror, onclick)
-    # and dangerous javascript: pseudo-protocols in links
-    for tag in soup.find_all(True):
-        # Clear attributes that start with 'on' (javascript events)
-        attrs_to_remove = [attr for attr in tag.attrs if attr.lower().startswith('on')]
-        for attr in attrs_to_remove:
-            del tag[attr]
-            
-        # Check href attributes for javascript: links
-        if tag.has_attr('href'):
-            if tag['href'].strip().lower().startswith('javascript:'):
-                tag['href'] = '#'
-                
-        if tag.has_attr('src'):
-            if tag['src'].strip().lower().startswith('javascript:'):
-                del tag['src']
 
-    return str(soup)
+    # Parse and remove dangerous structural elements first
+    soup = BeautifulSoup(raw_html, 'html.parser')
+    for tag in soup.find_all(['script', 'iframe', 'object', 'embed', 'applet', 'meta', 'link', 'style']):
+        tag.decompose()
+
+    cleaned = str(soup)
+
+    # Strong allowlist-based sanitizer
+    cleaned = bleach.clean(
+        cleaned,
+        tags=ALLOWED_TAGS,
+        attributes=ALLOWED_ATTRIBUTES,
+        protocols=ALLOWED_PROTOCOLS,
+        strip=True,
+    )
+
+    # Add rel="noopener noreferrer" to links for safety
+    cleaned = bleach.linkify(
+        cleaned,
+        callbacks=[bleach.callbacks.nofollow, bleach.callbacks.target_blank]
+    )
+
+    return cleaned
+
+
+def escape_pre_text(text):
+    return f"<pre>{html.escape(text)}</pre>"
+
+
+def decode_part_payload(part):
+    payload = part.get_payload(decode=True)
+    if payload is None:
+        return ""
+    charset = part.get_content_charset() or 'utf-8'
+    return payload.decode(charset, errors='ignore')
+
+
+def extract_best_body(message):
+    """
+    Prefer text/html over text/plain, while avoiding obvious attachments.
+    """
+    html_body = None
+    text_body = None
+
+    if message.is_multipart():
+        for part in message.walk():
+            if part.is_multipart():
+                continue
+
+            content_type = part.get_content_type()
+            disposition = (part.get_content_disposition() or '').lower()
+
+            # Skip attachments
+            if disposition == 'attachment':
+                continue
+
+            decoded = decode_part_payload(part)
+            if not decoded:
+                continue
+
+            if content_type == 'text/html' and html_body is None:
+                html_body = decoded
+            elif content_type == 'text/plain' and text_body is None:
+                text_body = decoded
+    else:
+        decoded = decode_part_payload(message)
+        if decoded:
+            if message.get_content_type() == 'text/html':
+                html_body = decoded
+            else:
+                text_body = decoded
+
+    if html_body is not None:
+        return sanitize_html(html_body)
+
+    if text_body is not None:
+        return escape_pre_text(text_body)
+
+    return "<pre>(No body content)</pre>"
+
 
 mbox = mailbox.mbox(MBOX_FILE)
 
 print("Starting secure extraction...")
 for idx, message in enumerate(mbox):
-    subject = decode_mime_header(message['subject'])
-    msg_from = decode_mime_header(message['from'])
-    date = decode_mime_header(message['date'])
-    
-    # Extract the body
-    body = ""
-    if message.is_multipart():
-        for part in message.walk():
-            content_type = part.get_content_type()
-            if content_type == 'text/html':
-                body = part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='ignore')
-                break
-            elif content_type == 'text/plain' and not body:
-                body = f"<pre>{part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='ignore')}</pre>"
-    else:
-        payload = message.get_payload(decode=True)
-        charset = message.get_content_charset() or 'utf-8'
-        if message.get_content_type() == 'text/html':
-            body = payload.decode(charset, errors='ignore')
-        else:
-            body = f"<pre>{payload.decode(charset, errors='ignore')}</pre>"
+    subject = html.escape(decode_mime_header(message['subject']))
+    msg_from = html.escape(decode_mime_header(message['from']))
+    date = html.escape(decode_mime_header(message['date']))
 
-    # Sanitize the extracted body payload
-    sanitized_body = sanitize_html(body)
+    sanitized_body = extract_best_body(message)
 
-    # Construct secure HTML Wrapper
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -96,6 +152,10 @@ for idx, message in enumerate(mbox):
         body {{ font-family: sans-serif; margin: 20px; line-height: 1.5; color: #333; }}
         .metadata {{ background: #f4f4f4; padding: 10px; border-left: 4px solid #0066cc; margin-bottom: 20px; }}
         .content {{ padding: 10px; border: 1px solid #ddd; background: #fff; }}
+        pre {{ white-space: pre-wrap; word-wrap: break-word; }}
+        img {{ max-width: 100%; height: auto; }}
+        table {{ border-collapse: collapse; }}
+        td, th {{ border: 1px solid #ddd; padding: 4px; }}
     </style>
 </head>
 <body>
@@ -110,7 +170,6 @@ for idx, message in enumerate(mbox):
 </body>
 </html>"""
 
-    # Fix path traversal: Name files sequentially rather than using user-controlled subject lines
     safe_filename = f"email_{idx}.html"
     with open(os.path.join(OUTPUT_DIR, safe_filename), "w", encoding="utf-8") as f:
         f.write(html_content)
