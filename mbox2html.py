@@ -173,7 +173,7 @@ html_content = f"""<!DOCTYPE html>
 </head>
 <body>
     <h1>Email Archive</h1>
-    {'<hr>\n'.join(email_sections)}
+    {'<hr>' + chr(10).join(email_sections)}
 </body>
 </html>"""
 
